@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waste2Art Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background: #f4f4f4;
+        }
+        .container {
+            width: 400px;
+            margin: auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px #ccc;
+        }
+        #preview {
+            width: 100%;
+            display: none;
+            margin-top: 10px;
+            border-radius: 6px;
+        }
+        #outputImage {
+            width: 100%;
+            margin-top: 20px;
+            display: none;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #0a84ff;
+            color: white;
+            border: none;
+            font-size: 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        #status {
+            margin-top: 15px;
+            font-weight: bold;
+            color: #333;
+            min-height: 24px;
+        }
+       
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Waste2Art AI Generator</h2>
+
+    <input type="file" id="inputImage" accept="image/*">
+
+    <img id="preview">
+
+    <button onclick="generateArt()">Generate Artwork</button>
+
+    <p id="status"></p>
+<div id="infoBox" style="
+    display:none;
+    background: linear-gradient(135deg, #ffe5c2, #ffd1e8);
+    border: none;
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 25px;
+    font-size: 17px;
+    line-height: 1.7;
+    color: #4a2b00;
+    font-weight: 500;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+    text-align: center;
+">
+    <div id="infoIcon" style="font-size: 35px; margin-bottom: 10px;"></div>
+
+    <div id="infoTitle" style="
+        font-weight: 600; 
+        font-size: 20px; 
+        margin-bottom: 12px;">
+        📘 While We Prepare Your Artwork…
+    </div>
+
+    <div id="infoContent" style="
+        animation: slideIn 0.8s ease;">
+        Here's something interesting!
+    </div>
+
+    <div id="progressOuter" style="
+        margin-top: 20px;
+        background: rgba(255,255,255,0.5);
+        border-radius: 20px;
+        height: 10px;
+        width: 100%;
+        overflow: hidden;">
+        <div id="progressInner" style="
+            height: 100%;
+            width: 0%;
+            background: #ff7ab5;
+            border-radius: 20px;
+            transition: width 0.8s ease;"></div>
+    </div>
+</div>
+
+
+
+    <img id="outputImage">
+</div>
+
+<script>
+const statusEl = document.getElementById("status");
+const btn = document.querySelector("button");
+
+const messages = [
+  "🔍 Analyzing image for objects...",
+  "🧪 Identifying materials and biodegradability...",
+  "🧠 Composing creative prompt...",
+  "🎨 Generating artwork using Stable Diffusion...",
+  "⏳ Finalizing image..."
+];
+
+let rotInterval = null;
+
+function startStatusCycle() {
+  let i = 0;
+  statusEl.innerText = messages[0];
+
+  rotInterval = setInterval(() => {
+    i++;
+
+    if (i < messages.length) {
+      statusEl.innerText = messages[i];
+
+      // ⭐ Trigger info box ONLY when final message appears
+      if (messages[i] === "⏳ Finalizing image...") {
+        startInfoBox();
+      }
+    }
+  }, 2000);
+}
+
+
+function stopStatus(finalMsg) {
+  clearInterval(rotInterval);
+  statusEl.innerText = finalMsg;
+}
+
+function generateArt() {
+  const fileInput = document.getElementById("inputImage");
+
+  if (!fileInput.files.length) {
+    alert("Please upload an image first.");
+    return;
+  }
+
+  btn.disabled = true;
+
+  startStatusCycle();
+
+  const formData = new FormData();
+  formData.append("image", fileInput.files[0]);
+
+  fetch("http://127.0.0.1:5000/process", {
+    method: "POST",
+    body: formData
+  })
+  .then(async res => {
+    if (!res.ok) throw new Error(await res.text());
+    return res.blob();
+  })
+  .then(blob => {
+    const img = document.getElementById("outputImage");
+    img.src = URL.createObjectURL(blob);
+    img.style.display = "block";
+
+    stopStatus("✅ Artwork generated successfully!");
+    stopInfoBox();   // also stop info box when done
+  })
+  .catch(err => {
+    console.error(err);
+    stopStatus("❌ Failed to generate artwork. Check console.");
+    stopInfoBox();
+  })
+  .finally(() => {
+    btn.disabled = false;
+  });
+}
+
+
+document.getElementById("inputImage").addEventListener("change", function() {
+  const preview = document.getElementById("preview");
+  preview.src = URL.createObjectURL(this.files[0]);
+  preview.style.display = "block";
+});
+const infoBox = document.getElementById("infoBox");
+const infoTitle = document.getElementById("infoTitle");
+const infoContent = document.getElementById("infoContent");
+
+const factIcons = [
+  "🌍", // Earth
+  "🍃", // Leaf
+  "♻️", // Recycle
+  "🎨", // Paint palette
+  "🌈", // Rainbow/Creativity
+  "🐢", // Marine Life
+  "🌿", // Nature
+  "🔥", // Energy savings
+  "🧴", // Plastic bottle
+  "🗑️", // Waste bin
+  "💡", // Bright idea
+  "🌊", // Ocean life
+  "🪵", // Wood / Paper
+  "🏭"  // Pollution / Reminder
+];
+
+const funFacts = [
+  "Recycling a single plastic bottle saves enough energy to power a lightbulb for 6 hours!",
+  "Recycled paper reduces the need for deforestation — every ton saves around 17 trees.",
+  "Aluminum is the artist of recyclables — it can be reused infinitely without losing quality.",
+  "Only 9% of the world’s plastic waste has ever been recycled… we can do better!",
+  "Many modern artists create stunning sculptures using discarded household waste.",
+  "Over a million sea creatures are harmed yearly due to plastic pollution — let's change that.",
+  "Biodegradable waste returns to the Earth, but plastics remain for decades.",
+  "Producing new plastic uses 8% of the world’s oil supply — recycling cuts that drastically.",
+  "A plastic bottle can take over 450 years to decompose if not recycled properly.",
+  "The average person generates over 1.5 kg of waste per day — small actions matter.",
+  "Upcycling turns discarded materials into products more valuable than the original!",
+  "Roughly 14 million tons of plastic end up in the ocean every year.",
+  "Recycling one ton of cardboard saves 46 gallons of oil.",
+  "Factories producing new plastic generate far more emissions than recycling centers."
+];
+
+
+
+let infoInterval = null;
+
+function startInfoBox() {
+  infoBox.style.display = "block";
+
+  setTimeout(() => {
+    infoBox.style.opacity = "1";
+    infoBox.style.transform = "translateY(0)";
+  }, 50);
+
+  let i = 0;
+
+  // Set first icon + fact
+  infoIcon.innerText = factIcons[i];
+  infoContent.innerText = funFacts[i];
+  infoContent.style.animation = "slideIn 0.8s ease";
+
+  // Reset progress bar
+  progressInner.style.width = "0%";
+
+  infoInterval = setInterval(() => {
+    i = (i + 1) % funFacts.length;
+
+    // Update icon
+    infoIcon.innerText = factIcons[i];
+
+    // Restart animation
+    infoContent.style.animation = "none";
+    void infoContent.offsetHeight;
+
+    infoContent.innerText = funFacts[i];
+    infoContent.style.animation = "slideIn 0.8s ease";
+
+    // Update progress bar (7 steps = 100%)
+    progressInner.style.width = ((i + 1) / funFacts.length * 100) + "%";
+
+  }, 7000);  // slower transitions
+}
+
+function stopInfoBox() {
+  clearInterval(infoInterval);
+
+  infoBox.style.opacity = "0";
+  infoBox.style.transform = "translateY(20px)";
+
+  setTimeout(() => {
+    infoBox.style.display = "none";
+  }, 600);
+}
+
+
+</script>
+
+</body>
+</html>

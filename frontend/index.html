@@ -172,32 +172,69 @@ function generateArt() {
   const formData = new FormData();
   formData.append("image", fileInput.files[0]);
 
-  fetch("http://127.0.0.1:5000/process", {
+fetch("http://127.0.0.1:5000/process", {
     method: "POST",
     body: formData
-  })
-  .then(async res => {
-    if (!res.ok) throw new Error(await res.text());
-    return res.blob();
-  })
-  .then(blob => {
+})
+.then(async res => {
+
+    const contentType = res.headers.get("Content-Type");
+
+    // -----------------------------------------------------
+    // CASE 1: Backend returned JSON → show info message box
+    // -----------------------------------------------------
+    if (contentType && contentType.includes("application/json")) {
+        const data = await res.json();
+        stopInfoBox();
+        btn.disabled = false;
+
+        // Only biodegradable → stop and show message
+        if (data.error === "NO_RECYCLABLES") {
+            stopStatus("⚠ Only biodegradable objects detected.");
+            document.getElementById("outputImage").style.display = "none";
+            showInfoMessage("🍃 Biodegradable Waste Only",
+                "This waste does not require recycling artwork. No non-biodegradable materials detected.");
+            return;
+        }
+
+        // No waste objects detected
+        if (data.error === "NO_OBJECTS") {
+            stopStatus("⚠ No detectable objects.");
+            document.getElementById("outputImage").style.display = "none";
+            showInfoMessage("🔍 Nothing Detected",
+                "No waste objects were detected in the image. Try uploading a clearer picture.");
+            return;
+        }
+
+        // Any unexpected JSON error
+        stopStatus("❌ Error occurred.");
+        document.getElementById("outputImage").style.display = "none";
+        showInfoMessage("⚠ Unexpected Error", data.error || "Unknown backend error.");
+        return;
+    }
+
+    // -----------------------------------------------------
+    // CASE 2: Backend returned IMAGE → show artwork
+    // -----------------------------------------------------
+    const blob = await res.blob();
     const img = document.getElementById("outputImage");
     img.src = URL.createObjectURL(blob);
     img.style.display = "block";
 
     stopStatus("✅ Artwork generated successfully!");
-    stopInfoBox();   // also stop info box when done
-  })
-  .catch(err => {
-    console.error(err);
-    stopStatus("❌ Failed to generate artwork. Check console.");
     stopInfoBox();
-  })
-  .finally(() => {
-    btn.disabled = false;
-  });
-}
 
+})
+.catch(err => {
+    console.error(err);
+    stopStatus("❌ Failed to generate artwork.");
+    stopInfoBox();
+})
+.finally(() => {
+    btn.disabled = false;
+});
+
+}
 
 document.getElementById("inputImage").addEventListener("change", function() {
   const preview = document.getElementById("preview");
@@ -292,6 +329,20 @@ function stopInfoBox() {
   setTimeout(() => {
     infoBox.style.display = "none";
   }, 600);
+}
+function showInfoMessage(title, message) {
+    const infoBox = document.getElementById("infoBox");
+    const infoTitle = document.getElementById("infoTitle");
+    const infoContent = document.getElementById("infoContent");
+
+    infoTitle.innerText = title;
+    infoContent.innerText = message;
+
+    infoBox.style.display = "block";
+    setTimeout(() => {
+        infoBox.style.opacity = "1";
+        infoBox.style.transform = "translateY(0)";
+    }, 50);
 }
 
 

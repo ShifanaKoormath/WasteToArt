@@ -25,3 +25,9 @@ backend/output/
 # OS
 .DS_Store
 Thumbs.db
+# Stable Diffusion / large external deps
+stable-diffusion-webui*
+*.zip
+*.safetensors
+*.ckpt
+*.pt

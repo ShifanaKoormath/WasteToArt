@@ -1,131 +1,205 @@
-🌱 Waste-to-Art — Full Setup Guide (Beginner Friendly)
+🌱 Waste-to-Art Generator
 
-This project turns real-world waste images into AI-generated recycled artwork using:
+Transform real-world waste images into AI-generated recycled artwork using a complete end-to-end pipeline:
 
-YOLO object detection
+Waste object detection (YOLOv8)
 
-Biodegradability classification
+Biodegradability classification (CNN)
 
-Automatic prompt generation
+Automatic creative prompt generation
 
-Stable Diffusion image generation
+Stable Diffusion–based artwork generation
 
-This guide assumes zero prior experience.
-Follow each step exactly.
+This project is designed for college-level demonstration and assumes no prior AI experience.
 
-🟩 1. Create a New Project Folder
+🔍 What This System Does
 
-Create a folder anywhere, for example:
+When a user uploads an image of waste:
+
+Waste objects are detected
+
+Each object is cropped
+
+Objects are classified as Biodegradable / Non-Biodegradable
+
+A creative prompt is automatically generated
+
+Stable Diffusion creates a unique upcycled artwork
+
+The final image is shown in the frontend
+
+📁 Project Structure
+WasteToArt/
+├── backend/
+│   ├── server.py
+│   ├── pipeline.py
+│   ├── uploads/                ← uploaded images
+│   ├── output/                 ← generated artworks
+│   ├── detection/
+│   │   ├── detect.py
+│   │   ├── yolov8s.pt
+│   │   └── crops/              ← YOLO object crops
+│   ├── classification/
+│   │   ├── classify.py
+│   │   └── biowaste_classifier.keras
+│   ├── embedding/
+│   │   └── text_embed.py
+│   └── generation/
+│       └── generate_art.py
+│
+└── frontend/
+    └── index.html
+
+🚀 Features
+
+YOLOv8-based waste object detection
+
+Automatic object cropping
+
+Biodegradable vs non-biodegradable classification
+
+AI-generated creative prompts
+
+Stable Diffusion WebUI (API-based) image generation
+
+Simple frontend with preview + final artwork
+
+Full backend ↔ frontend integration
+
+🧩 Technologies Used
+
+Python 3.10+
+
+Ultralytics YOLOv8
+
+TensorFlow / Keras
+
+Stable Diffusion WebUI (AUTOMATIC1111 API)
+
+Flask
+
+HTML / CSS / JavaScript
+
+Sentence-Transformers (optional embeddings)
+
+🔧 System Requirements
+Minimum
+
+Windows or Linux
+
+Python 3.10
+
+Git
+
+8 GB RAM
+
+Recommended (for Stable Diffusion)
+
+GPU with 4 GB+ VRAM
+(Intel / AMD / NVIDIA all supported via DirectML)
+
+📦 Software Installation
+Install Python 3.10
+
+Download from:
+https://www.python.org/downloads/release/python-3100/
+
+⚠️ During installation:
+
+✔ Check Add Python to PATH
+
+🟩 SETUP STEPS (Follow in Order)
+🟩 1. Create the Project Folder
+
+Create a folder anywhere, e.g.:
 
 WasteToArtProject
 
 
-Open VS Code
+Open VS Code → File → Open Folder → WasteToArtProject
 
-Go to: File → Open Folder → select WasteToArtProject
-
-🟩 2. Open the Terminal (PowerShell)
+🟩 2. Open the Terminal
 
 Inside VS Code:
 
-👉 Press Ctrl + `
-Make sure the terminal says:
+Press Ctrl + `
 
-PS C:\...WasteToArtProject>
+Confirm you see:
 
-🟩 3. Clone the Repository Into This Folder
+PS C:\...\WasteToArtProject>
 
-In the terminal, run:
-
+🟩 3. Clone the Repository
 git clone https://github.com/ShifanaKoormath/WasteToArt.git
-
-
-After cloning:
-
 cd WasteToArt
 
 
-Your structure now becomes:
+Result:
 
 WasteToArtProject/
-    WasteToArt/   ← cloned repo
+└── WasteToArt/
 
-🟩 4. Download Stable Diffusion WebUI (Intel DirectML Version)
+🟩 4. Install Stable Diffusion WebUI (Intel DirectML)
+Why this version?
 
-⚠️ IMPORTANT
-This project works ONLY with the Intel DirectML version of Stable Diffusion
-because it's compatible with all GPUs (Intel, AMD, basic laptop GPUs, even some CPUs).
+No NVIDIA GPU required
 
-Download here:
+Works on Intel, AMD, and many CPU-only systems
 
-https://github.com/lshqqytiger/stable-diffusion-webui-directml
+Download:
+👉 https://github.com/lshqqytiger/stable-diffusion-webui-directml
 
-Click:
+Click Code → Download ZIP
 
-Code → Download ZIP
+Setup
 
+Extract ZIP
 
-Extract the ZIP.
-
-Rename the folder to:
+Rename folder to:
 
 stable-diffusion-webui
 
 
-Now move this entire folder inside your project folder, like this:
+Move into project root:
 
 WasteToArtProject/
-    WasteToArt/
-    stable-diffusion-webui/
+├── WasteToArt/
+└── stable-diffusion-webui/
 
-🟩 5. Download a Stable Diffusion Model File
+🟩 5. Download Stable Diffusion Model (Required)
 
-Stable Diffusion WILL NOT WORK without a model.
+Model:
 
-Recommended model (simple & lightweight):
+v1-5-pruned-emaonly.safetensors
 
-💾 v1-5-pruned-emaonly.safetensors
+
 Download:
+👉 https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors
 
-https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors
-
-After downloading:
-
-Move it into:
+Place here:
 
 stable-diffusion-webui/models/Stable-diffusion/
 
+🟩 6. Enable API + Safe Precision Mode
 
-Folder must look like:
-
-stable-diffusion-webui/
-    models/
-        Stable-diffusion/
-            v1-5-pruned-emaonly.safetensors
-
-🟩 6. Enable API + Safe Precision Settings
-
-Open this file:
+Open:
 
 stable-diffusion-webui/webui-user.bat
 
 
-Right-click → Edit
-
-Replace ALL content with:
+Replace contents with:
 
 @echo off
 set COMMANDLINE_ARGS=--api --precision full --no-half --no-half-vae
 call webui.bat
 
 
-Save & close.
+Save and close.
 
-🟩 7. IMPORTANT: Fix Float Precision Errors (Upcast Attention)
+🟩 7. Fix Float Precision Errors (CRITICAL)
 
 After Stable Diffusion launches:
 
-Open the webpage:
+Open:
 
 http://127.0.0.1:7860
 
@@ -136,142 +210,118 @@ Enable:
 
 ✔ Upcast cross-attention to float32
 
-Click “Apply settings”
 
-Click “Reload UI”
+Click Apply settings → Reload UI
 
-This prevents:
-
-RuntimeError: Input type (float) and bias type (Half) should be the same
+⚠️ Skipping this is the #1 cause of crashes
 
 🟩 8. Start Stable Diffusion
-
-Double-click:
-
-stable-diffusion-webui/webui-user.bat
+cd stable-diffusion-webui
+.\webui-user.bat
 
 
-Wait until you see:
+Wait until:
 
 Running on local URL: http://127.0.0.1:7860
 
 
-Keep this window open.
+✅ Keep this window running
 
-🟩 9. Backend Setup
+🧪 9. Manual Stable Diffusion Test (MANDATORY)
 
-In VS Code terminal:
+Open:
 
-cd WasteToArt/backend
+http://127.0.0.1:7860
+
+
+Paste this prompt exactly:
+
+a simple recycled art sculpture made from plastic bottles, eco-friendly, minimal design, studio lighting
+
+
+Leave defaults → Click Generate
+
+✅ PASS CRITERIA
+
+Image appears
+
+Progress reaches 100%
+
+No red terminal errors
+
+❌ If this fails, STOP. Backend will not work.
+
+🟩 10. Dataset Used
+
+Dataset:
+👉 https://www.kaggle.com/datasets/asdasdasasdas/garbage-classification
+
+Place inside:
+
+backend/dataset/
+
+
+Structure:
+
+train/
+val/
+
+
+Prepare subset:
+
+python backend/classification/prepare_subset.py
+
+
+Train classifier:
+
+python backend/classification/train_classifier.py
+
+🟩 11. Backend Setup
+cd backend
 python -m venv venv
-
-
-Activate:
-
 venv\Scripts\activate
-
-
-Install dependencies:
-
 pip install -r requirements.txt
 
-
-If anything fails:
-
-pip install flask flask-cors ultralytics tensorflow pillow numpy opencv-python sentence-transformers requests
-
-🟩 10. Start the Backend Server
-
-In the backend folder:
-
-python server.py
+🟩 12. Start Backend Server
+python backend/server.py
 
 
-You should see:
+Expected:
 
 Running on http://127.0.0.1:5000
 
+🟩 13. Run Frontend
 
-Backend ready ✔
-
-🟩 11. Run the Frontend
-
-No installation required.
-
-Simply:
-
-👉 Open the folder
-👉 Go to:
+Open:
 
 WasteToArt/frontend/index.html
 
 
-👉 Drag & drop into any browser (Chrome recommended)
+Drag into Chrome.
 
-Upload an image → the system will:
+Use images from:
 
-detect objects
+sample_inputs/
 
-classify biodegradable items
+🟦 System Pipeline Summary
+Image Upload
+   ↓
+YOLO Detection
+   ↓
+Object Cropping
+   ↓
+Biodegradability Classification
+   ↓
+Prompt Generation
+   ↓
+Stable Diffusion
+   ↓
+Final Artwork
 
-generate a creative prompt
+✅ Final Notes
 
-call Stable Diffusion
+Built for academic demonstration
 
-display final artwork
+Slow generation on CPU is expected
 
-🟦 12. How Everything Works Internally
-
-1️⃣ Frontend sends uploaded image to backend
-2️⃣ Backend saves it in /uploads
-3️⃣ YOLO detects objects → crops saved in /detection/crops
-4️⃣ Classifier determines biodegradable / non-biodegradable
-5️⃣ Prompt is automatically generated
-6️⃣ Backend sends prompt to Stable Diffusion API
-7️⃣ SD generates artwork → saved in /backend/output
-8️⃣ Frontend displays final AI art
-
-🟦 13. Project Folder You Should Have
-WasteToArtProject/
-│
-├── WasteToArt/                     ← cloned project
-│   ├── backend/
-│   ├── frontend/
-│   └── README.md
-│
-└── stable-diffusion-webui/         ← Intel DirectML SD version
-    ├── webui-user.bat
-    └── models/
-         └── Stable-diffusion/
-               └── v1-5-pruned-emaonly.safetensors
-
-🟦 14. COMMON ISSUES & FIXES
-❌ SD API Not Found (404)
-
-You forgot --api
-Fix:
-
-Open webui-user.bat → ensure:
-
---api
-
-❌ Float / Half precision error
-
-Fix (we already enabled):
-
-✔ Upcast cross-attention
-✔ --precision full
-✔ --no-half
-✔ --no-half-vae
-
-❌ Blank output / no generation
-
-Your model is in the wrong folder.
-
-Model MUST be here:
-
-stable-diffusion-webui/models/Stable-diffusion/
-
-❌ Backend cannot find Stable Diffusion
-
-Ensure SD is running on 127.0.0.1:7860
+Stability matters more than speed

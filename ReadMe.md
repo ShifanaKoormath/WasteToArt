@@ -1,194 +1,172 @@
+🌱 Waste-to-Art Generator
 
+Transform real-world waste images into AI-generated recycled artwork using a complete end-to-end pipeline:
 
-# 🌱 Waste-to-Art Generator
+Waste object detection (YOLOv8)
 
-**An Explainable AI System for Transforming Waste into Digital Art**
+Biodegradability classification (CNN)
 
-The Waste-to-Art Generator is an end-to-end AI system that transforms images of real-world waste into creative, upcycled digital artwork.
-It combines computer vision, material classification, and generative AI with a focus on **interpretability, sustainability awareness, and academic clarity**.
+Automatic creative prompt generation
 
-This project is designed for **college-level demonstration**, emphasizing how AI systems reason step-by-step rather than acting as black boxes.
+Stable Diffusion–based artwork generation
 
----
+This project is designed for college-level demonstration and assumes no prior AI experience.
 
-## 🔍 What This System Does
+🔍 What This System Does
 
-When a user uploads an image containing waste materials:
+When a user uploads an image of waste:
 
-1. Waste objects are detected from the image
-2. Low-confidence and irrelevant detections are filtered
-3. Detected objects are classified as biodegradable or non-biodegradable
-4. A structured creative prompt is generated based on detected materials and quantity
-5. A generative model creates an upcycled artwork concept
-6. The final artwork is displayed with an **AI reasoning summary explaining the process**
+Waste objects are detected
 
-The system prioritizes **accuracy, transparency, and stability over raw speed**.
+Each object is cropped
 
----
+Objects are classified as Biodegradable / Non-Biodegradable
 
-## 🧠 Explainable AI Focus (New)
+A creative prompt is automatically generated
 
-Unlike basic image-to-image demos, this system includes an **AI Reasoning Summary** in the frontend that explains:
+Stable Diffusion creates a unique upcycled artwork
 
-* How objects were detected and filtered
-* How materials were classified
-* How the creative concept was formed
-* What the final artwork represents
+The final image is shown in the frontend
 
-The reasoning is presented in **plain language**, without mentioning internal model or framework names, making it suitable for non-technical evaluators.
-
----
-
-## 🎨 Frontend Capabilities (Updated)
-
-The frontend now provides:
-
-* Image upload with live preview
-* Optional creative controls:
-
-  * Art style (e.g., minimalist, abstract, handcrafted)
-  * Mood (e.g., calm, hopeful, earthy)
-  * Short creative notes (style-only guidance)
-* A redesigned sustainability insight panel shown during processing
-* Final artwork display with:
-
-  * Download Artwork button
-  * Collapsible AI Reasoning Summary
-
-The UI is intentionally calm and minimal to keep focus on the artwork and reasoning.
-
----
-
-## 📁 Project Structure
-
-```
+📁 Project Structure
 WasteToArt/
 ├── backend/
-│   ├── server.py              # API + image serving
-│   ├── pipeline.py            # End-to-end processing logic
-│   ├── uploads/               # Uploaded images
-│   ├── output/                # Generated artworks
+│   ├── server.py
+│   ├── pipeline.py
+│   ├── uploads/                ← uploaded images
+│   ├── output/                 ← generated artworks
 │   ├── detection/
 │   │   ├── detect.py
 │   │   ├── yolov8s.pt
-│   │   └── crops/
+│   │   └── crops/              ← YOLO object crops
 │   ├── classification/
 │   │   ├── classify.py
 │   │   └── biowaste_classifier.keras
-│   ├── prompt/
-│   │   └── prompt_builder.py  # Backend-authoritative prompt logic
+│   ├── embedding/
+│   │   └── text_embed.py
 │   └── generation/
 │       └── generate_art.py
 │
 └── frontend/
-    └── index.html              # Interactive UI + explainability
-```
+    └── index.html
 
----
+🚀 Features
 
-## 🚀 Key Features
+YOLOv8-based waste object detection
 
-* Waste object detection with confidence filtering
-* Automatic object cropping
-* Biodegradable vs non-biodegradable classification
-* Backend-controlled creative prompt generation
-* Quantity-aware material interpretation (e.g., multiple bottles → reusable objects)
-* Stable Diffusion–based artwork generation (API-driven)
-* Explainable AI reasoning summary
-* Downloadable final artwork
-* Clean backend ↔ frontend API separation
+Automatic object cropping
 
----
+Biodegradable vs non-biodegradable classification
 
-## 🧩 Technologies Used
+AI-generated creative prompts
 
-* Python 3.10+
-* Ultralytics YOLOv8
-* TensorFlow / Keras
-* Stable Diffusion WebUI (AUTOMATIC1111 API)
-* Flask
-* HTML / CSS / JavaScript
+Stable Diffusion WebUI (API-based) image generation
 
-*(Embeddings are optional and used only for internal prompt refinement.)*
+Simple frontend with preview + final artwork
 
----
+Full backend ↔ frontend integration
 
-## 🔧 System Requirements
+🧩 Technologies Used
 
-### Minimum
+Python 3.10+
 
-* Windows or Linux
-* Python 3.10
-* Git
-* 8 GB RAM
+Ultralytics YOLOv8
 
-### Recommended (for Stable Diffusion)
+TensorFlow / Keras
 
-* GPU with 4 GB+ VRAM
-* Intel / AMD / NVIDIA supported via DirectML
+Stable Diffusion WebUI (AUTOMATIC1111 API)
 
----
+Flask
 
-## 📦 Software Installation
+HTML / CSS / JavaScript
 
-### Install Python 3.10
+Sentence-Transformers (optional embeddings)
+
+🔧 System Requirements
+Minimum
+
+Windows or Linux
+
+Python 3.10
+
+Git
+
+8 GB RAM
+
+Recommended (for Stable Diffusion)
+
+GPU with 4 GB+ VRAM
+(Intel / AMD / NVIDIA all supported via DirectML)
+
+📦 Software Installation
+Install Python 3.10
 
 Download from:
-[https://www.python.org/downloads/release/python-3100/](https://www.python.org/downloads/release/python-3100/)
+https://www.python.org/downloads/release/python-3100/
 
-During installation:
-✔ Check **Add Python to PATH**
+⚠️ During installation:
 
----
+✔ Check Add Python to PATH
 
-## 🟩 Setup Steps (Follow in Order)
+🟩 SETUP STEPS (Follow in Order)
+🟩 1. Create the Project Folder
 
-### 1. Create the Project Folder
+Create a folder anywhere, e.g.:
 
-```
 WasteToArtProject
 ```
 
 Open in VS Code.
 
----
+Open VS Code → File → Open Folder → WasteToArtProject
 
-### 2. Open the Terminal
+🟩 2. Open the Terminal
 
 Press `Ctrl + ``
 Confirm:
 
-```
+Press Ctrl + `
+
+Confirm you see:
+
 PS C:\...\WasteToArtProject>
 ```
 
----
-
-### 3. Clone the Repository
-
-```bash
+🟩 3. Clone the Repository
 git clone https://github.com/ShifanaKoormath/WasteToArt.git
 cd WasteToArt
-```
 
----
 
-### 4. Install Stable Diffusion WebUI (DirectML)
+Result:
 
-This version works without NVIDIA GPUs.
+WasteToArtProject/
+└── WasteToArt/
+
+🟩 4. Install Stable Diffusion WebUI (Intel DirectML)
+Why this version?
+
+No NVIDIA GPU required
+
+Works on Intel, AMD, and many CPU-only systems
 
 Download:
-[https://github.com/lshqqytiger/stable-diffusion-webui-directml](https://github.com/lshqqytiger/stable-diffusion-webui-directml)
+👉 https://github.com/lshqqytiger/stable-diffusion-webui-directml
 
-Extract and rename to:
+Click Code → Download ZIP
 
-```
+Setup
+
+Extract ZIP
+
+Rename folder to:
+
 stable-diffusion-webui
 ```
 
 Project structure:
 
-```
+Move into project root:
+
 WasteToArtProject/
 ├── WasteToArt/
 └── stable-diffusion-webui/
@@ -196,33 +174,35 @@ WasteToArtProject/
 
 ---
 
-### 5. Download Stable Diffusion Model
+🟩 5. Download Stable Diffusion Model (Required)
 
 Model:
+Model:
 
-```
 v1-5-pruned-emaonly.safetensors
 ```
 
 Place in:
 
-```
+Download:
+👉 https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors
+
+Place here:
+
 stable-diffusion-webui/models/Stable-diffusion/
 ```
 
----
+🟩 6. Enable API + Safe Precision Mode
 
-### 6. Enable API + Safe Precision Mode
+Open:
 
-Edit:
-
-```
 stable-diffusion-webui/webui-user.bat
 ```
 
 Replace contents:
 
-```bat
+Replace contents with:
+
 @echo off
 set COMMANDLINE_ARGS=--api --precision full --no-half --no-half-vae
 call webui.bat
@@ -230,9 +210,9 @@ call webui.bat
 
 ---
 
-### 7. Fix Float Precision Errors (CRITICAL)
+Save and close.
 
-After launch, open:
+🟩 7. Fix Float Precision Errors (CRITICAL)
 
 ```
 http://127.0.0.1:7860
@@ -241,50 +221,65 @@ http://127.0.0.1:7860
 Settings → Optimizations → Enable:
 ✔ Upcast cross-attention to float32
 
-Apply and reload.
 
----
+Click Apply settings → Reload UI
 
-### 8. Start Stable Diffusion
+⚠️ Skipping this is the #1 cause of crashes
 
-```bash
+🟩 8. Start Stable Diffusion
 cd stable-diffusion-webui
 .\webui-user.bat
-```
 
-Keep this window running.
 
----
+Wait until:
 
-### 9. Manual Stable Diffusion Test (MANDATORY)
+Running on local URL: http://127.0.0.1:7860
 
-Prompt:
 
-```
-a simple recycled art sculpture made from plastic bottles,
-eco-friendly, minimal design, studio lighting
-```
+✅ Keep this window running
 
-If this fails, stop — backend will not work.
+🧪 9. Manual Stable Diffusion Test (MANDATORY)
 
----
+Open:
 
-### 10. Dataset Used (Optional Training)
+http://127.0.0.1:7860
+
+
+Paste this prompt exactly:
+
+a simple recycled art sculpture made from plastic bottles, eco-friendly, minimal design, studio lighting
+
+
+Leave defaults → Click Generate
+
+✅ PASS CRITERIA
+
+Image appears
+
+Progress reaches 100%
+
+No red terminal errors
+
+❌ If this fails, STOP. Backend will not work.
+
+🟩 10. Dataset Used
 
 Dataset:
-[https://www.kaggle.com/datasets/asdasdasasdas/garbage-classification](https://www.kaggle.com/datasets/asdasdasasdas/garbage-classification)
+👉 https://www.kaggle.com/datasets/asdasdasasdas/garbage-classification
+
+Place inside:
+
+backend/dataset/
+
 
 Structure:
 
-```
-backend/dataset/
- ├── train/
- └── val/
-```
+train/
+val/
+
 
 Prepare subset:
 
-```bash
 python backend/classification/prepare_subset.py
 ```
 
@@ -294,22 +289,13 @@ Train classifier:
 python backend/classification/train_classifier.py
 ```
 
----
-
-### 11. Backend Setup
-
-```bash
+🟩 11. Backend Setup
 cd backend
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
-```
 
----
-
-### 12. Start Backend Server
-
-```bash
+🟩 12. Start Backend Server
 python backend/server.py
 ```
 
@@ -319,54 +305,38 @@ Expected:
 Running on http://127.0.0.1:5000
 ```
 
----
-
-### 13. Run Frontend
+🟩 13. Run Frontend
 
 Open:
 
-```
-frontend/index.html
-```
+WasteToArt/frontend/index.html
 
-Use a modern browser (Chrome recommended).
 
----
+Drag into Chrome.
 
-## 🟦 System Pipeline Summary
+Use images from:
 
-```
+sample_inputs/
+
+🟦 System Pipeline Summary
 Image Upload
    ↓
-Object Detection
+YOLO Detection
    ↓
-Confidence Filtering
+Object Cropping
    ↓
-Material Classification
+Biodegradability Classification
    ↓
-Creative Prompt Construction
+Prompt Generation
    ↓
-Artwork Generation
+Stable Diffusion
    ↓
-Explainable Result + Download
-```
+Final Artwork
 
----
+✅ Final Notes
 
-## ⚠️ Limitations
+Built for academic demonstration
 
-* Detection accuracy depends on image clarity and lighting
-* Transparent plastics may reduce confidence scores
-* Artwork is conceptual and digitally generated
-* CPU-only systems will experience slower generation
+Slow generation on CPU is expected
 
----
-
-## ✅ Final Notes
-
-* Built for academic demonstration
-* Emphasizes **interpretability and reasoning**
-* Stability and clarity matter more than speed
-
----
-
+Stability matters more than speed

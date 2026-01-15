@@ -1,348 +1,397 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Waste2Art Generator</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            background: #f4f4f4;
-        }
-        .container {
-            width: 400px;
-            margin: auto;
-            padding: 20px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 0 10px #ccc;
-        }
-        #preview {
-            width: 100%;
-            display: none;
-            margin-top: 10px;
-            border-radius: 6px;
-        }
-        #outputImage {
-            width: 100%;
-            margin-top: 20px;
-            display: none;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background: #0a84ff;
-            color: white;
-            border: none;
-            font-size: 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-top: 15px;
-        }
-        #status {
-            margin-top: 15px;
-            font-weight: bold;
-            color: #333;
-            min-height: 24px;
-        }
-       
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Waste2Art Generator</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 40px;
+  background: #f4f4f4;
+}
+.container {
+  width: 420px;
+  margin: auto;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #ccc;
+}
+#preview, #outputImage {
+  width: 100%;
+  margin-top: 12px;
+  border-radius: 6px;
+  display: none;
+}
+select, textarea {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+textarea { resize: none; }
+.fade-slide {
+  animation: fadeSlide 0.6s ease;
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background: #0a84ff;
+  color: white;
+  border: none;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 15px;
+}
+
+.secondary-btn {
+  background: #e8f1ff;
+  color: #0a84ff;
+  border: 1px solid #0a84ff;
+  margin-top: 10px;
+}
+
+#status {
+  margin-top: 15px;
+  font-weight: bold;
+  min-height: 24px;
+}
+
+.section {
+  margin-top: 25px;
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.section h3 {
+  margin-bottom: 10px;
+}
+
+.collapsible {
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#reasoningContent {
+  display: none;
+  margin-top: 10px;
+}
+
+#infoContent {
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.factTag {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 4px 10px;
+  font-size: 12px;
+  background: rgba(255,255,255,0.6);
+  border-radius: 12px;
+  font-weight: 600;
+}
+
 @keyframes slideIn {
   from { opacity: 0; transform: translateY(14px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-
-    </style>
+</style>
 </head>
+
 <body>
 
 <div class="container">
-    <h2>Waste2Art AI Generator</h2>
+<h2>Waste2Art AI Generator</h2>
 
-    <input type="file" id="inputImage" accept="image/*">
+<input type="file" id="inputImage" accept="image/*">
+<img id="preview">
 
-    <img id="preview">
+<select id="style">
+  <option value="">🎨 Art Style (optional)</option>
+  <option value="minimal">Minimalist</option>
+  <option value="abstract">Abstract</option>
+  <option value="modern">Modern</option>
+  <option value="handcrafted">Handcrafted</option>
+</select>
 
-    <button onclick="generateArt()">Generate Artwork</button>
+<select id="mood">
+  <option value="">🌿 Mood (optional)</option>
+  <option value="calm">Calm</option>
+  <option value="hopeful">Hopeful</option>
+  <option value="earthy">Earthy</option>
+  <option value="dramatic">Dramatic</option>
+</select>
 
-    <p id="status"></p>
+<textarea id="notes" rows="3"
+placeholder="Optional creative notes (style only, max 150 chars)"></textarea>
+
+<button onclick="generateArt()">Generate Artwork</button>
+<p id="status"></p>
+
+<!-- INFO BOX -->
+<!-- INFO BOX (REFINED – NO PROGRESS BAR) -->
 <div id="infoBox" style="
-    display:none;
-    background: linear-gradient(135deg, #ffe5c2, #ffd1e8);
-    border: none;
-    border-radius: 16px;
-    padding: 20px;
-    margin-top: 25px;
-    font-size: 17px;
-    line-height: 1.7;
-    color: #4a2b00;
-    font-weight: 500;
-    box-shadow: 0 8px 18px rgba(0,0,0,0.12);
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.7s ease, transform 0.7s ease;
-    text-align: center;
+display:none;
+background: linear-gradient(135deg, #eef4ff, #f5fff9);
+border-radius:14px;
+padding:22px 24px;
+margin-top:25px;
+color:#1f2937;
+box-shadow:0 6px 20px rgba(0,0,0,0.08);
+opacity:0;
+transform:translateY(14px);
+transition:opacity 0.5s ease, transform 0.5s ease;
+text-align:left;
 ">
-    <div id="infoIcon" style="font-size: 35px; margin-bottom: 10px;"></div>
 
-    <div id="infoTitle" style="
-        font-weight: 600; 
-        font-size: 20px; 
-        margin-bottom: 12px;">
-        📘 While We Prepare Your Artwork…
-    </div>
+  <div id="infoTitle" style="
+    font-size:14px;
+    font-weight:600;
+    letter-spacing:0.4px;
+    color:#2563eb;
+    margin-bottom:12px;
+    text-transform:uppercase;">
+    Sustainability Insight
+  </div>
 
-    <div id="infoContent" style="
-        animation: slideIn 0.8s ease;">
-        Here's something interesting!
-    </div>
+  <div id="infoContent" style="
+    font-size:15px;
+    line-height:1.65;
+    color:#374151;
+    max-width:360px;">
+  </div>
 
-    <div id="progressOuter" style="
-        margin-top: 20px;
-        background: rgba(255,255,255,0.5);
-        border-radius: 20px;
-        height: 10px;
-        width: 100%;
-        overflow: hidden;">
-        <div id="progressInner" style="
-            height: 100%;
-            width: 0%;
-            background: #ff7ab5;
-            border-radius: 20px;
-            transition: width 0.8s ease;"></div>
-    </div>
 </div>
 
 
+<!-- RESULT SECTION -->
+<div class="section" id="resultSection" style="display:none;">
+  <h3>🎨 Your Recycled Artwork</h3>
+  <p style="font-size:14px;color:#555;">
+    This artwork was generated by transforming detected waste materials into a
+    creative, sustainable art concept.
+  </p>
 
-    <img id="outputImage">
+  <img id="outputImage">
+
+  
+</div>
+
+<!-- REASONING (COLLAPSIBLE – IMPROVED) -->
+<div class="section" id="reasoningBox" style="display:none;">
+  <div class="collapsible" onclick="toggleReasoning()">
+    🧠 How the artwork was created
+    <span id="toggleIcon">➕</span>
+  </div>
+
+  <div id="reasoningContent" style="
+    margin-top:12px;
+    font-size:14px;
+    line-height:1.6;
+    color:#374151;">
+  </div>
+</div>
+
+
 </div>
 
 <script>
 const statusEl = document.getElementById("status");
 const btn = document.querySelector("button");
+let generatedImageURL = "";
 
 const messages = [
-  "🔍 Analyzing image for objects...",
-  "🧪 Identifying materials and biodegradability...",
-  "🧠 Composing creative prompt...",
-  "🎨 Generating artwork using Stable Diffusion...",
-  "⏳ Finalizing image..."
+ "🔍 Analyzing image for objects...",
+ "🧪 Identifying materials and biodegradability...",
+ "🧠 Composing creative prompt...",
+ "🎨 Generating artwork using Stable Diffusion...",
+ "⏳ Finalizing image..."
 ];
 
 let rotInterval = null;
 
 function startStatusCycle() {
-  let i = 0;
-  statusEl.innerText = messages[0];
+ let i = 0;
+ statusEl.innerText = messages[0];
+ rotInterval = setInterval(() => {
+   i++;
+   if (i < messages.length) {
+     statusEl.innerText = messages[i];
+     if (messages[i].includes("Finalizing")) startInfoBox();
+   }
+ }, 2000);
+}
 
-  rotInterval = setInterval(() => {
-    i++;
+function stopStatus(msg) {
+ clearInterval(rotInterval);
+ statusEl.innerText = msg;
+}
 
-    if (i < messages.length) {
-      statusEl.innerText = messages[i];
+function toggleReasoning() {
+ const content = document.getElementById("reasoningContent");
+ const icon = document.getElementById("toggleIcon");
+ const open = content.style.display === "block";
+ content.style.display = open ? "none" : "block";
+ icon.innerText = open ? "➕" : "➖";
+}
 
-      // ⭐ Trigger info box ONLY when final message appears
-      if (messages[i] === "⏳ Finalizing image...") {
-        startInfoBox();
-      }
-    }
-  }, 2000);
+function showReasoning(reasoning) {
+  const box = document.getElementById("reasoningBox");
+  const content = document.getElementById("reasoningContent");
+
+  const materials = Object.entries(reasoning.materials || {})
+    .map(([k,v]) => `${v} ${k}${v > 1 ? "s" : ""}`)
+    .join(", ");
+
+  content.innerHTML = `
+    <p><b>1. Object Detection</b><br>
+    The system analyzed the uploaded image and identified multiple waste objects.
+    After removing uncertain or irrelevant detections, 
+    <b>${reasoning.accepted_detections}</b> object(s) were confidently selected
+    (${materials}).</p>
+
+    <p><b>2. Material Classification</b><br>
+    Each selected object was evaluated based on material characteristics.
+    The detected waste was classified as 
+    <b>${reasoning.non_biodegradable > 0 ? "non-biodegradable" : "biodegradable"}</b>,
+    indicating suitability for recycling-based reuse.</p>
+
+    <p><b>3. Creative Interpretation</b><br>
+    Using the identified materials and their quantity, a creative concept was formed
+    to demonstrate how everyday waste can be transformed into functional or artistic objects,
+    such as decor items or utility pieces.</p>
+
+    <p><b>Conclusion</b><br>
+    The generated artwork visually represents sustainable reuse of discarded materials,
+    highlighting how waste can be reimagined as valuable and meaningful design.</p>
+  `;
+
+  box.style.display = "block";
 }
 
 
-function stopStatus(finalMsg) {
-  clearInterval(rotInterval);
-  statusEl.innerText = finalMsg;
+function downloadImage() {
+ const a = document.createElement("a");
+ a.href = generatedImageURL;
+ a.download = "waste2art_artwork.png";
+ document.body.appendChild(a);
+ a.click();
+ document.body.removeChild(a);
 }
 
 function generateArt() {
-  const fileInput = document.getElementById("inputImage");
+ const fileInput = document.getElementById("inputImage");
+ if (!fileInput.files.length) return alert("Upload an image first");
 
-  if (!fileInput.files.length) {
-    alert("Please upload an image first.");
-    return;
-  }
+ btn.disabled = true;
+ startStatusCycle();
 
-  btn.disabled = true;
+ const formData = new FormData();
+ formData.append("image", fileInput.files[0]);
+ formData.append("style", style.value);
+ formData.append("mood", mood.value);
+ formData.append("notes", notes.value);
 
-  startStatusCycle();
+ fetch("http://127.0.0.1:5000/process", { method:"POST", body:formData })
+ .then(res => res.json())
+ .then(data => {
+   stopInfoBox();
+   btn.disabled = false;
 
-  const formData = new FormData();
-  formData.append("image", fileInput.files[0]);
+   if (data.error) {
+     stopStatus("⚠ " + data.error);
+     return;
+   }
 
-fetch("http://127.0.0.1:5000/process", {
-    method: "POST",
-    body: formData
-})
-.then(async res => {
+   const filename = data.image_path.split("\\").pop();
+   generatedImageURL = `http://127.0.0.1:5000/image/${filename}`;
 
-    const contentType = res.headers.get("Content-Type");
+   outputImage.src = generatedImageURL;
+   outputImage.style.display = "block";
+   document.getElementById("resultSection").style.display="block";
 
-    // -----------------------------------------------------
-    // CASE 1: Backend returned JSON → show info message box
-    // -----------------------------------------------------
-    if (contentType && contentType.includes("application/json")) {
-        const data = await res.json();
-        stopInfoBox();
-        btn.disabled = false;
+   stopStatus("✅ Artwork generated successfully");
 
-        // Only biodegradable → stop and show message
-        if (data.error === "NO_RECYCLABLES") {
-            stopStatus("⚠ Only biodegradable objects detected.");
-            document.getElementById("outputImage").style.display = "none";
-            showInfoMessage("🍃 Biodegradable Waste Only",
-                "This waste does not require recycling artwork. No non-biodegradable materials detected.");
-            return;
-        }
-
-        // No waste objects detected
-        if (data.error === "NO_OBJECTS") {
-            stopStatus("⚠ No detectable objects.");
-            document.getElementById("outputImage").style.display = "none";
-            showInfoMessage("🔍 Nothing Detected",
-                "No waste objects were detected in the image. Try uploading a clearer picture.");
-            return;
-        }
-
-        // Any unexpected JSON error
-        stopStatus("❌ Error occurred.");
-        document.getElementById("outputImage").style.display = "none";
-        showInfoMessage("⚠ Unexpected Error", data.error || "Unknown backend error.");
-        return;
-    }
-
-    // -----------------------------------------------------
-    // CASE 2: Backend returned IMAGE → show artwork
-    // -----------------------------------------------------
-    const blob = await res.blob();
-    const img = document.getElementById("outputImage");
-    img.src = URL.createObjectURL(blob);
-    img.style.display = "block";
-
-    stopStatus("✅ Artwork generated successfully!");
-    stopInfoBox();
-
-})
-.catch(err => {
-    console.error(err);
-    stopStatus("❌ Failed to generate artwork.");
-    stopInfoBox();
-})
-.finally(() => {
-    btn.disabled = false;
-});
-
+   if (data.reasoning) showReasoning(data.reasoning);
+ })
+ .catch(err => {
+   console.error(err);
+   stopStatus("❌ Generation failed");
+ })
+ .finally(()=> btn.disabled=false);
 }
 
-document.getElementById("inputImage").addEventListener("change", function() {
-  const preview = document.getElementById("preview");
-  preview.src = URL.createObjectURL(this.files[0]);
-  preview.style.display = "block";
+inputImage.addEventListener("change", e => {
+ preview.src = URL.createObjectURL(e.target.files[0]);
+ preview.style.display="block";
 });
-const infoBox = document.getElementById("infoBox");
-const infoTitle = document.getElementById("infoTitle");
-const infoContent = document.getElementById("infoContent");
 
-const factIcons = [
-  "🌍", // Earth
-  "🍃", // Leaf
-  "♻️", // Recycle
-  "🎨", // Paint palette
-  "🌈", // Rainbow/Creativity
-  "🐢", // Marine Life
-  "🌿", // Nature
-  "🔥", // Energy savings
-  "🧴", // Plastic bottle
-  "🗑️", // Waste bin
-  "💡", // Bright idea
-  "🌊", // Ocean life
-  "🪵", // Wood / Paper
-  "🏭"  // Pollution / Reminder
-];
-
+/* FUN FACTS */
+const factIcons=["🌍","🍃","♻️","🎨","🌈","🐢","🌿","🔥","🧴","🗑️","💡","🌊","🪵","🏭"];
 const funFacts = [
-  "Recycling a single plastic bottle saves enough energy to power a lightbulb for 6 hours!",
-  "Recycled paper reduces the need for deforestation — every ton saves around 17 trees.",
-  "Aluminum is the artist of recyclables — it can be reused infinitely without losing quality.",
-  "Only 9% of the world’s plastic waste has ever been recycled… we can do better!",
-  "Many modern artists create stunning sculptures using discarded household waste.",
-  "Over a million sea creatures are harmed yearly due to plastic pollution — let's change that.",
-  "Biodegradable waste returns to the Earth, but plastics remain for decades.",
-  "Producing new plastic uses 8% of the world’s oil supply — recycling cuts that drastically.",
-  "A plastic bottle can take over 450 years to decompose if not recycled properly.",
-  "The average person generates over 1.5 kg of waste per day — small actions matter.",
-  "Upcycling turns discarded materials into products more valuable than the original!",
-  "Roughly 14 million tons of plastic end up in the ocean every year.",
-  "Recycling one ton of cardboard saves 46 gallons of oil.",
-  "Factories producing new plastic generate far more emissions than recycling centers."
+  "Recycling one plastic bottle saves enough energy to power a light bulb for six hours.",
+  "Recycling a ton of paper can prevent the cutting of approximately 17 trees.",
+  "Aluminum can be recycled indefinitely without losing material quality.",
+  "Globally, less than 10% of all plastic waste has been recycled.",
+  "Many contemporary artists use discarded materials to create functional art.",
+  "Plastic pollution causes harm to over a million marine animals each year.",
+  "Most plastics remain in the environment for decades or longer.",
+  "Manufacturing new plastic consumes a significant portion of global oil supply.",
+  "A single plastic bottle can take up to 450 years to decompose naturally.",
+  "An average individual generates more than 1.5 kilograms of waste per day.",
+  "Upcycling converts waste materials into products of higher value.",
+  "Millions of tons of plastic enter the oceans every year.",
+  "Recycling cardboard significantly reduces oil and water consumption.",
+  "Producing new plastic emits far more CO₂ than recycling existing materials."
 ];
 
 
-
-let infoInterval = null;
-
-function startInfoBox() {
+let factIndex=0, infoInterval=null;
+function startInfoBox(){
   infoBox.style.display = "block";
-
   setTimeout(() => {
     infoBox.style.opacity = "1";
     infoBox.style.transform = "translateY(0)";
-  }, 50);
+  }, 30);
 
-  let i = 0;
-
-  // Set first icon + fact
-  infoIcon.innerText = factIcons[i];
-  infoContent.innerText = funFacts[i];
-  infoContent.style.animation = "slideIn 0.8s ease";
-
-  // Reset progress bar
-  progressInner.style.width = "0%";
-
-  infoInterval = setInterval(() => {
-    i = (i + 1) % funFacts.length;
-
-    // Update icon
-    infoIcon.innerText = factIcons[i];
-
-    // Restart animation
-    infoContent.style.animation = "none";
-    void infoContent.offsetHeight;
-
-    infoContent.innerText = funFacts[i];
-    infoContent.style.animation = "slideIn 0.8s ease";
-
-    // Update progress bar (7 steps = 100%)
-    progressInner.style.width = ((i + 1) / funFacts.length * 100) + "%";
-
-  }, 7000);  // slower transitions
+  renderFact();
+  infoInterval = setInterval(renderFact, 6500);
 }
 
-function stopInfoBox() {
-  clearInterval(infoInterval);
-
-  infoBox.style.opacity = "0";
-  infoBox.style.transform = "translateY(20px)";
-
-  setTimeout(() => {
-    infoBox.style.display = "none";
-  }, 600);
+function stopInfoBox(){
+ clearInterval(infoInterval);
+ infoBox.style.opacity=0;
+ setTimeout(()=>infoBox.style.display="none",600);
 }
-function showInfoMessage(title, message) {
-    const infoBox = document.getElementById("infoBox");
-    const infoTitle = document.getElementById("infoTitle");
-    const infoContent = document.getElementById("infoContent");
+function renderFact() {
+  // Reset animation
+  infoContent.classList.remove("fade-slide");
+  void infoContent.offsetHeight;
 
-    infoTitle.innerText = title;
-    infoContent.innerText = message;
+  infoContent.innerHTML = funFacts[factIndex];
+  infoContent.classList.add("fade-slide");
 
-    infoBox.style.display = "block";
-    setTimeout(() => {
-        infoBox.style.opacity = "1";
-        infoBox.style.transform = "translateY(0)";
-    }, 50);
+  factIndex = (factIndex + 1) % funFacts.length;
 }
 
 

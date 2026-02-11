@@ -340,3 +340,9 @@ Built for academic demonstration
 Slow generation on CPU is expected
 
 Stability matters more than speed
+
+
+Safe Recovery CheckPoint
+
+git checkout -b restore-old pre-art-upgrade
+

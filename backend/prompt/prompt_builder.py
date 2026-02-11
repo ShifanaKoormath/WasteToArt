@@ -1,5 +1,6 @@
-# backend/prompt/prompt_builder.py
 import re
+from collections import Counter
+
 
 # -------------------------------
 # Guardrails
@@ -11,15 +12,14 @@ FORBIDDEN_KEYWORDS = [
     "gold", "diamond", "space", "galaxy"
 ]
 
-MAX_USER_TEXT_LEN = 150
+MAX_USER_TEXT_LEN = 120
 
 
 def sanitize_user_text(text: str) -> str:
     if not text:
         return ""
 
-    text = text.lower().strip()
-    text = text[:MAX_USER_TEXT_LEN]
+    text = text.lower().strip()[:MAX_USER_TEXT_LEN]
 
     for word in FORBIDDEN_KEYWORDS:
         text = re.sub(rf"\b{word}\b", "", text)
@@ -28,73 +28,238 @@ def sanitize_user_text(text: str) -> str:
 
 
 # -------------------------------
+# Composition Logic
+# -------------------------------
+
+def choose_composition(count):
+    if count == 1:
+        return "a handcrafted artistic transformation"
+    elif count <= 3:
+        return "a small assembled recycled artwork"
+    elif count <= 6:
+        return "a structured recycled art composition"
+    else:
+        return "a layered clustered recycled artwork"
+
+
+# -------------------------------
+# Material → Texture
+# -------------------------------
+
+MATERIAL_TEXTURE_MAP = {
+    "bottle": "recycled translucent plastic texture",
+    "plastic": "recycled plastic surface",
+    "can": "recycled aluminum metal texture",
+    "tin": "brushed metal surface",
+    "glass": "recycled reflective glass texture",
+    "paper": "recycled paper texture",
+    "cardboard": "corrugated cardboard texture"
+}
+
+
+# -------------------------------
+# Object → Shape grounding
+# -------------------------------
+
+OBJECT_SHAPE_MAP = {
+    "bottle": "cylindrical bottle-like form",
+    "cup": "curved cup-like form",
+    "can": "cylindrical can-like form",
+    "glass": "rounded glass-like form",
+    "paper": "flat layered sheet-like form",
+    "cardboard": "layered structural form",
+    "box": "rectangular geometric form"
+}
+
+
+# -------------------------------
+# Shape orientation from bbox
+# -------------------------------
+
+def extract_orientation_hint(detections):
+    vertical = 0
+    horizontal = 0
+
+    for det in detections:
+        if "bbox" not in det:
+            continue
+
+        x1, y1, x2, y2 = det["bbox"]
+        w = max(1, x2 - x1)
+        h = max(1, y2 - y1)
+
+        if h / w > 1.25:
+            vertical += 1
+        elif h / w < 0.8:
+            horizontal += 1
+
+    if vertical > horizontal:
+        return "mostly vertical arrangement"
+    if horizontal > vertical:
+        return "mostly horizontal arrangement"
+
+    return ""
+
+
+# -------------------------------
+# Art Target Suggestion (Hybrid)
+# -------------------------------
+
+def suggest_art_target(material_counts):
+
+    mats = set(material_counts.keys())
+
+    if "bottle" in mats:
+        return "lamp sculpture"
+
+    if "cup" in mats:
+        return "flower sculpture"
+
+    if "can" in mats or "tin" in mats:
+        return "abstract metal sculpture"
+
+    if "paper" in mats or "cardboard" in mats:
+        return "wall decor artwork"
+
+    return "recycled sculpture"
+
+
+# -------------------------------
 # Prompt Builder
 # -------------------------------
 
 def build_prompt(
+
     detections,
     biodegradable_count,
     non_biodegradable_count,
     style=None,
     mood=None,
-    user_notes=None
+    user_notes=None,
+    art_target_override=None
 ):
-    """
-    This function is the ONLY place where final prompts are built.
-    Frontend input is treated as suggestions, not authority.
-    """
+    print(">>> NEW PROMPT BUILDER ACTIVE <<<")
 
-    # ---- Extract non-biodegradable objects only ----
-    materials = []
-    for det in detections:
-        if det.get("biodeg_label") == "Non-Biodegradable":
-            materials.append(det["class"])
-
-    materials = list(set(materials))
+    # -------------------------------
+    # Collect recyclable objects
+    # -------------------------------
+    materials = [
+        det["class"]
+        for det in detections
+        if det.get("biodeg_label") == "Non-Biodegradable"
+    ]
 
     if not materials:
-        raise ValueError("No recyclable materials available for prompt generation")
+        raise ValueError("No recyclable materials found")
 
-    # ---- System-controlled base prompt ----
+    counts = Counter(materials)
+    total_objects = sum(counts.values())
+
+    # -------------------------------
+    # Hybrid art target
+    # -------------------------------
+    suggested_target = suggest_art_target(counts)
+    final_target = art_target_override if art_target_override else suggested_target
+
+    # -------------------------------
+    # Material phrase
+    # -------------------------------
+    material_parts = []
+    for mat, count in counts.items():
+        if count == 1:
+            material_parts.append(f"a {mat}")
+        else:
+            material_parts.append(f"{count} {mat}s")
+
+    materials_text = ", ".join(material_parts)
+
+    # -------------------------------
+    # Composition
+    # -------------------------------
+    composition_text = choose_composition(total_objects)
+
+    # -------------------------------
+    # Shape + texture grounding
+    # -------------------------------
+    orientation_hint = extract_orientation_hint(detections)
+
+    shape_hints = [
+        OBJECT_SHAPE_MAP[m]
+        for m in counts.keys()
+        if m in OBJECT_SHAPE_MAP
+    ]
+
+    texture_hints = [
+        MATERIAL_TEXTURE_MAP[m]
+        for m in counts.keys()
+        if m in MATERIAL_TEXTURE_MAP
+    ]
+
+    shape_text = ", ".join(shape_hints)
+    texture_text = ", ".join(texture_hints)
+
+    # -------------------------------
+    # Lamp-specific glow (functional realism)
+    # -------------------------------
+    lamp_glow_hint = ""
+    if "lamp" in final_target.lower():
+        lamp_glow_hint = "soft warm internal light glow"
+
+    # -------------------------------
+    # Base prompt (CLEAN + IMPRESSIVE)
+    # -------------------------------
     base_prompt = (
-        f"A recycled art sculpture made from discarded {', '.join(materials)}, "
-        f"eco-friendly upcycled artwork, sustainable materials, environmental theme"
+        f"A recycled {final_target} created from {materials_text}, "
+        f"{composition_text}, "
+        f"{orientation_hint}, "
+        f"{shape_text}, "
+        f"{texture_text}, "
+        f"{lamp_glow_hint}, "
+        f"visibly handcrafted structure, carefully assembled recycled components, "
+        f"realistic material behavior, believable physical construction, "
+        f"artistic handcrafted recycled design"
     )
 
-    # ---- Style presets (safe) ----
+    # -------------------------------
+    # Style & Mood
+    # -------------------------------
     STYLE_MAP = {
-        "minimal": "minimalist design, clean forms",
-        "abstract": "abstract artistic form",
-        "modern": "modern contemporary sculpture",
-        "handcrafted": "handcrafted recycled art look"
+        "minimal": "minimalist style",
+        "abstract": "abstract artistic interpretation",
+        "modern": "modern contemporary design",
+        "handcrafted": "handcrafted aesthetic"
     }
 
     MOOD_MAP = {
-        "calm": "soft lighting, calm atmosphere",
-        "hopeful": "hopeful and positive mood",
-        "earthy": "natural earthy tones",
-        "dramatic": "dramatic lighting and contrast"
+        "calm": "soft lighting",
+        "hopeful": "uplifting mood",
+        "earthy": "earthy natural tones",
+        "dramatic": "dramatic lighting"
     }
 
     style_text = STYLE_MAP.get(style, "")
     mood_text = MOOD_MAP.get(mood, "")
-    user_text = sanitize_user_text(user_notes)
+    user_hint = sanitize_user_text(user_notes)
 
-    # ---- Final prompt assembly ----
+    # -------------------------------
+    # Final Prompt
+    # -------------------------------
     final_prompt = ", ".join(
-        part for part in [
+        p for p in [
             base_prompt,
             style_text,
             mood_text,
-            user_text,
-            "studio lighting, high quality, detailed"
-        ] if part
+            user_hint,
+            "high detail, clean composition, professional artwork, visibly transformed into recycled art, not a photograph"
+        ] if p
     )
 
-    # ---- Negative prompt (fixed) ----
+    # -------------------------------
+    # Negative Prompt
+    # -------------------------------
     negative_prompt = (
-        "real people, faces, animals, fantasy creatures, weapons, "
-        "text, watermark, low quality, blurry, distorted"
+        "people, faces, animals, realistic photo, unchanged object, messy composition, "
+        "low quality, blurry, distorted, watermark, text"
     )
 
     return final_prompt, negative_prompt

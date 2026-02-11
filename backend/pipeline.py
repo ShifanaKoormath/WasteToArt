@@ -3,6 +3,8 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from detection.detect import run_detection
 from classification.classify import predict_class
+import prompt.prompt_builder as pb
+print("PROMPT BUILDER FILE:", pb.__file__)
 from prompt.prompt_builder import build_prompt
 from generation.generate_art import generate_art
 
@@ -10,7 +12,7 @@ from generation.generate_art import generate_art
 # -------------------------------
 # Detection filtering rules
 # -------------------------------
-CONF_THRESHOLD = 0.5
+CONF_THRESHOLD = 0.40
 
 ALLOWED_WASTE_CLASSES = {
     "bottle",
@@ -29,8 +31,10 @@ def process_image(
     return_path=False,
     style=None,
     mood=None,
-    user_notes=None
+    user_notes=None,
+    user_art_target=None
 ):
+
     # -------------------------------
     # Reasoning (PER REQUEST)
     # -------------------------------
@@ -73,6 +77,10 @@ def process_image(
             print(f"⚠ Ignored non-waste class: {cls}")
             continue
 
+        # Attach bbox for shape-aware prompt logic
+        if "bbox" not in det and "xyxy" in det:
+            det["bbox"] = det.get("xyxy")
+
         detections.append(det)
 
     reasoning["accepted_detections"] = len(detections)
@@ -86,6 +94,9 @@ def process_image(
     print(f"\n✅ Accepted {len(detections)} waste object(s):")
     for det in detections:
         print(f" - {det['class']} (conf {det['conf']:.2f})")
+
+    # Sort detections by confidence (strongest first)
+    detections.sort(key=lambda x: x["conf"], reverse=True)
 
     # -------------------------------------------------
     # Classification
@@ -130,8 +141,11 @@ def process_image(
         non_biodegradable_count=non_biodegradable_count,
         style=style,
         mood=mood,
-        user_notes=user_notes
+        user_notes=user_notes,
+        art_target_override=user_art_target   # optional, can be None
+        
     )
+
 
     print("\nFINAL PROMPT:")
     print(prompt_text)
@@ -145,18 +159,39 @@ def process_image(
 
     output_path = os.path.join(OUTPUT_DIR, f"{uuid.uuid4().hex}.png")
 
-    print("\n🎨 Generating artwork...")
-    generate_art(prompt_text, negative_prompt, output_path)
+    print("\n🎨 Attempting artwork generation...")
 
-    print("\n✅ DONE! Image saved at:", output_path)
+    try:
+        # Use img2img only when at least 1 strong object detected
+        use_img2img = reasoning["accepted_detections"] >= 1
+
+        generate_art(
+            prompt_text,
+            negative_prompt,
+            output_path,
+            input_image if use_img2img else None
+        )
+        generation_status = "success"
+    except Exception as e:
+        print("⚠ Stable Diffusion unavailable:", str(e))
+        generation_status = "sd_not_available"
+
+    if generation_status == "success":
+        print("\n✅ DONE! Image saved at:", output_path)
+    else:
+        print("\n⚠ Artwork not generated (Stable Diffusion unavailable)")
 
     # -------------------------------------------------
     # RETURN IMAGE + REASONING
     # -------------------------------------------------
     if return_path:
         return {
-            "image_path": output_path,
+            "image_path": output_path if generation_status == "success" else None,
+            "generation_status": generation_status,
+            "prompt": prompt_text,
+            "negative_prompt": negative_prompt,
             "reasoning": reasoning
         }
+
 
     return output_path

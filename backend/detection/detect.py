@@ -78,7 +78,9 @@ def run_detection(image_path):
         detections.append({
             "class": cls_name,
             "conf": conf,
-            "crop_path": crop_path
+            "crop_path": crop_path,
+            "bbox": [x1, y1, x2, y2]
+
         })
 
     return detections

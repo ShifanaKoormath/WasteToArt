@@ -142,6 +142,15 @@ button {
   <option value="dramatic">Dramatic</option>
 </select>
 
+<select id="art_target">
+  <option value="">🎨 AI Suggested (Auto)</option>
+  <option value="lamp sculpture">Lamp</option>
+  <option value="flower sculpture">Flower</option>
+  <option value="decor artwork">Decor</option>
+  <option value="recycled sculpture">Sculpture</option>
+  <option value="installation artwork">Installation</option>
+</select>
+
 <textarea id="notes" rows="3"
 placeholder="Optional creative notes (style only, max 150 chars)"></textarea>
 
@@ -311,6 +320,7 @@ function generateArt() {
  formData.append("style", style.value);
  formData.append("mood", mood.value);
  formData.append("notes", notes.value);
+ formData.append("art_target", document.getElementById("art_target").value);
 
  fetch("http://127.0.0.1:5000/process", { method:"POST", body:formData })
  .then(res => res.json())
@@ -331,6 +341,18 @@ function generateArt() {
    document.getElementById("resultSection").style.display="block";
 
    stopStatus("✅ Artwork generated successfully");
+
+
+   if (data.generation_status === "sd_not_available") {
+   stopStatus("⚠ Stable Diffusion not running. Prompt generated successfully.");
+   console.log("PROMPT:", data.prompt);
+   return;
+}
+if (!data.image_path) {
+   stopStatus("⚠ Prompt generated. Awaiting Stable Diffusion execution.");
+   console.log("PROMPT:", data.prompt);
+   return;
+}
 
    if (data.reasoning) showReasoning(data.reasoning);
  })

@@ -9,3 +9,6 @@ opencv-python-headless
 Pillow
 torch
 numpy
+flask
+flask_cors
+tensorflow

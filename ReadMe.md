@@ -346,3 +346,8 @@ Safe Recovery CheckPoint
 
 git checkout -b restore-old pre-art-upgrade
 
+
+Verion 2 Checkpoint
+
+git checkout v2-shape-preservation
+
